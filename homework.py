@@ -61,12 +61,9 @@ class Training:
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
 
-        training_type = self.__class__.__name__
-        distance = self.get_distance()
-        speed = self.get_mean_speed()
-        calories = self.get_spent_calories()
-        info = InfoMessage(training_type,
-                           self.duration, distance, speed, calories)
+        info = InfoMessage(self.__class__.__name__,
+                           self.duration, self.get_distance(),
+                           self.get_mean_speed(), self.get_spent_calories())
         return info
 
 
@@ -151,6 +148,8 @@ def read_package(workout_type: str,
     SWM: str = 'SWM'
     RUN: str = 'RUN'
     WLK: str = 'WLK'
+    types: str = ''
+
     workout_types: Dict[str, Type[Training]] = {
         SWM: Swimming,
         RUN: Running,
@@ -159,12 +158,12 @@ def read_package(workout_type: str,
     if workout_type in workout_types:
         return workout_types[workout_type](*data)
     else:
+        for i in list(workout_types):
+            types += f'{i}, '
         raise ValueError(
             f'Текущая версия модуля фитнес-трекера работает '
-            f'с данными тренировок типа {workout_types[SWM]}, '
-            f'{workout_types[RUN]}, {workout_types[WLK]} '
-            f'(коды тренировок {SWM}, {RUN}, {WLK} соответственно).'
-            f'От датчиков поступили данные о тренировке типа {workout_type}.')
+            f'с данными тренировок c кодами {types}а от датчиков '
+            f'поступили данные о неизвестной тренировке с кодом {workout_type}.')
 
 
 def main(training: Training) -> None:
@@ -177,7 +176,7 @@ if __name__ == '__main__':
     packages: List = [
         ('SWM', [720, 1, 80, 25, 40]),
         ('RUN', [15000, 1, 75]),
-        ('WLK', [9000, 1, 75, 180]),
+        ('WLK', [9000, 1, 75, 180])
     ]
 
     for workout_type, data in packages:
