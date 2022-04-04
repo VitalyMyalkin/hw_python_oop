@@ -145,15 +145,12 @@ def read_package(workout_type: str,
                  data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
 
-    SWM: str = 'SWM'
-    RUN: str = 'RUN'
-    WLK: str = 'WLK'
     types: str = ''
 
     workout_types: Dict[str, Type[Training]] = {
-        SWM: Swimming,
-        RUN: Running,
-        WLK: SportsWalking
+        'SWM': Swimming,
+        'RUN': Running,
+        'WLK': SportsWalking
     }
     if workout_type in workout_types:
         return workout_types[workout_type](*data)
@@ -161,9 +158,9 @@ def read_package(workout_type: str,
         for i in list(workout_types):
             types += f'{i}, '
         raise ValueError(
-            f'Текущая версия модуля фитнес-трекера работает '
-            f'с данными тренировок c кодами {types}а от датчиков '
-            f'поступили данные о неизвестной тренировке с кодом {workout_type}.')
+            f'Текущая версия модуля фитнес-трекера работает c данными '
+            f'тренировок c кодами {types}а от датчиков поступили '
+            f'данные о неизвестной тренировке с кодом {workout_type}.')
 
 
 def main(training: Training) -> None:
