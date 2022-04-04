@@ -1,4 +1,3 @@
-import math
 from typing import Dict, Type, List
 
 
@@ -18,177 +17,160 @@ class InfoMessage:
         self.calories = calories
 
     def get_message(self) -> str:
-        # формируем строку сообщения
+        """Формируем строку сообщения."""
         return (f'Тип тренировки: {self.training_type}; '
                 f'Длительность: {self.duration:.3f} ч.; '
                 f'Дистанция: {self.distance:.3f} км; '
                 f'Ср. скорость: {self.speed:.3f} км/ч; '
                 f'Потрачено ккал: {self.calories:.3f}.')
 
-    pass
-
 
 class Training:
     """Базовый класс тренировки."""
 
     LEN_STEP: float = 0.65
-    M_IN_KM: int = 1000
-    H_IN_M: int = 60
+    M_IN_KM: float = 1000
+    H_IN_M: float = 60
 
     def __init__(self,
                  action: int,
                  duration: float,
-                 weight: float,
-                 ) -> None:
+                 weight: float) -> None:
         self.action = action
         self.duration = duration
         self.weight = weight
 
-        pass
-
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-        distance: float = self.action * self.LEN_STEP / self.M_IN_KM
-        return distance
-        pass
+        return self.action * self.LEN_STEP / self.M_IN_KM
+        # тут раньше была переменная "distance".
+        # мы ее убрали, чтобы она не занимала память?
+        # а высчитанное этой функцией значение
+        # разве не сохраняется в какую-то ячейку?
+        # и, соответственно, опять займет память...
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
-        speed: float = self.get_distance() / self.duration
-        return speed
-        pass
+        return self.get_distance() / self.duration
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
-
-    def get_name(self) -> str:
-        """Получить название тренировки."""
-        pass
+        raise NotImplementedError(
+            'Определите get_spent_calories в %s.' % self.__class__.__name__)
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
 
-        training_type = self.get_name()
+        training_type = self.__class__.__name__
         distance = self.get_distance()
         speed = self.get_mean_speed()
         calories = self.get_spent_calories()
         info = InfoMessage(training_type,
                            self.duration, distance, speed, calories)
         return info
-        pass
 
 
 class Running(Training):
     """Тренировка: бег."""
 
-    def __init__(self, action, duration, weight) -> None:
-        # класс бег - наследник тренировки
+    COEFF_CALORIE_1: int = 18
+    COEFF_CALORIE_2: int = 20
+
+    def __init__(self,
+                 action: int,
+                 duration: float,
+                 weight: float) -> None:
+        """Класс бег - наследник тренировки."""
         super().__init__(action, duration, weight)
 
-    def get_name(self) -> str:
-        # получаем имя для тренировки
-        training_type = 'Running'
-        return training_type
-
     def get_spent_calories(self) -> float:
-        # расчет калорий бега
-        coeff_calorie_1: int = 18
-        coeff_calorie_2: int = 20
-        calories: float = ((coeff_calorie_1 * self.get_mean_speed()
-                            - coeff_calorie_2) * self.weight
-                           / self.M_IN_KM * self.duration * self.H_IN_M)
-        return calories
-
-    pass
+        """Расчет калорий бега."""
+        return ((self.COEFF_CALORIE_1 * self.get_mean_speed()
+                 - self.COEFF_CALORIE_2) * self.weight
+                / self.M_IN_KM * self.duration * self.H_IN_M)
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
 
-    def __init__(self,
-                 action,
-                 duration,
-                 weight,
-                 height) -> None:
-        # класс спортходьба - наследник тренировки
-        super().__init__(action, duration, weight)
-        self.height: float = height
+    COEFF_WALK_1: float = 0.035
+    COEFF_WALK_2: float = 0.029
 
-    def get_name(self) -> str:
-        # получаем имя для тренировки
-        training_type = 'SportsWalking'
-        return training_type
+    def __init__(self,
+                 action: int,
+                 duration: float,
+                 weight: float,
+                 height: float) -> None:
+        """Класс спортходьба - наследник тренировки."""
+        super().__init__(action, duration, weight)
+        self.height = height
 
     def get_spent_calories(self) -> float:
-        # расчет калорий ходьбы
-        coeff_walk_1: float = 0.035
-        coeff_walk_2: float = 0.029
-        calories: float = ((coeff_walk_1 * self.weight
-                            + (math.sqrt(self.get_mean_speed()) // self.height)
-                            * coeff_walk_2 * self.weight)
-                           * self.duration * self.H_IN_M)
-        return calories
-
-    pass
+        """Расчет калорий ходьбы."""
+        return ((self.COEFF_WALK_1 * self.weight
+                 + (self.get_mean_speed() ** 2 // self.height)
+                 * self.COEFF_WALK_2 * self.weight)
+                * self.duration * self.H_IN_M)
+    # если здесь использование функции math.sqrt неверно,
+    # то почему значение калорий рассчитывается правильно??
 
 
 class Swimming(Training):
     """Тренировка: плавание."""
 
     LEN_STEP: float = 1.38
+    COEFF_SWIM_1: float = 1.1
+    COEFF_SWIM_2: float = 2
 
     def __init__(self,
-                 action,
-                 duration,
-                 weight,
+                 action: int,
+                 duration: float,
+                 weight: float,
                  length_pool: float,
                  count_pool: float) -> None:
-        # класс плавание - наследник тренировки
+        """Класс плавание - наследник тренировки."""
         super().__init__(action, duration, weight)
         self.length_pool = length_pool
         self.count_pool = count_pool
 
-    def get_name(self) -> str:
-        # получаем имя для тренировки
-        training_type = 'Swimming'
-        return training_type
-
     def get_mean_speed(self) -> float:
-        # расчет скорости плавание
-        speed: float = (self.length_pool * self.count_pool
-                        / self.M_IN_KM / self.duration)
-        return speed
+        """Расчет скорости плавание."""
+        return (self.length_pool * self.count_pool
+                / self.M_IN_KM / self.duration)
 
     def get_spent_calories(self) -> float:
-        # расчет калорий плавание
-        coeff_swim_1: float = 1.1
-        coeff_swim_2: float = 2
-        calories: float = (self.get_mean_speed()
-                           + coeff_swim_1) * coeff_swim_2 * self.weight
-        return calories
-
-    pass
+        """Расчет калорий плавание."""
+        return (self.get_mean_speed()
+                + self.COEFF_SWIM_1) * self.COEFF_SWIM_2 * self.weight
 
 
 def read_package(workout_type: str,
                  data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
+
+    SWM: str = 'SWM'
+    RUN: str = 'RUN'
+    WLK: str = 'WLK'
     workout_types: Dict[str, Type[Training]] = {
-        'SWM': Swimming,
-        'RUN': Running,
-        'WLK': SportsWalking
+        SWM: Swimming,
+        RUN: Running,
+        WLK: SportsWalking
     }
     if workout_type in workout_types:
         return workout_types[workout_type](*data)
-    pass
+    else:
+        raise ValueError(
+            f'Текущая версия модуля фитнес-трекера работает '
+            f'с данными тренировок типа {workout_types[SWM]}, '
+            f'{workout_types[RUN]}, {workout_types[WLK]} '
+            f'(коды тренировок {SWM}, {RUN}, {WLK} соответственно).'
+            f'От датчиков поступили данные о тренировке типа {workout_type}.')
 
 
 def main(training: Training) -> None:
     """Главная функция."""
     info = training.show_training_info()
     print(info.get_message())
-    pass
 
 
 if __name__ == '__main__':
